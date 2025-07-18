@@ -1,0 +1,15 @@
+.receiveButton{
+  animation: receive-animation 1s infinite;
+}
+
+@keyframes receive-animation {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
