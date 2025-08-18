@@ -1,122 +1,106 @@
 'use client'
-import React from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 
 // Local
 import PathDrawing from "./Drawing"
 import Variants from "./Propogation"
-
-// Shad CN
-import { Progress } from "@/components/ui/progress"
+import useOnlineStatus from './useOnlineStatus';
+import { TimedProgressBar } from './Progress'
 
 // Framer Motion
 import { motion, AnimatePresence } from "motion/react"
 
-const quiz = [
-    {
-        id: 1,
-        question: 'Who was the first President of the United States?',
-        options: ['George Washington', 'Thomas Jefferson', 'Abraham Lincoln', 'John Adams'],
-        answer: 'George Washington'
-    },
-    {
-        id: 2,
-        question: 'What is the smallest planet in our solar system?',
-        options: ['Mercury', 'Mars', 'Venus', 'Pluto'],
-        answer: 'Mercury'
-    },
-    {
-        id: 3,
-        question: 'Which element has the atomic number 1?',
-        options: ['Oxygen', 'Hydrogen', 'Helium', 'Carbon'],
-        answer: 'Hydrogen'
-    },
-    {
-        id: 4,
-        question: 'In which year did World War II end?',
-        options: ['1945', '1939', '1942', '1950'],
-        answer: '1945'
-    },
-    {
-        id: 5,
-        question: 'What is the currency of the United Kingdom?',
-        options: ['Euro', 'Dollar', 'Pound Sterling', 'Franc'],
-        answer: 'Pound Sterling'
-    },
-    {
-        id: 6,
-        question: 'Which artist painted the Mona Lisa?',
-        options: ['Leonardo da Vinci', 'Vincent van Gogh', 'Pablo Picasso', 'Michelangelo'],
-        answer: 'Leonardo da Vinci'
-    },
-    {
-        id: 7,
-        question: 'What is the tallest mountain in the world?',
-        options: ['K2', 'Mount Kilimanjaro', 'Mount Everest', 'Denali'],
-        answer: 'Mount Everest'
-    },
-    {
-        id: 8,
-        question: 'Which organ in the human body is responsible for pumping blood?',
-        options: ['Lungs', 'Brain', 'Heart', 'Liver'],
-        answer: 'Heart'
-    },
-    {
-        id: 9,
-        question: 'What is the main ingredient in guacamole?',
-        options: ['Tomato', 'Avocado', 'Onion', 'Cucumber'],
-        answer: 'Avocado'
-    },
-    {
-        id: 10,
-        question: 'Which movie features the character "Forrest Gump"?',
-        options: ['Cast Away', 'Forrest Gump', 'Saving Private Ryan', 'The Green Mile'],
-        answer: 'Forrest Gump'
-    }
-];
+interface QuizData {
+    response_code: boolean,
+    results: {
+        type: string,
+        difficulty: string,
+        category: string,
+        question: string,
+        correct_answer: string,
+        incorrect_answers: string[],
+    }[]
+}
+
+interface Quiz {
+    id: number,
+    question: string,
+    options: string[],
+    answer: string
+}
+
+function decodeHtml(html: string): string {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+}
 
 const Quiz = () => {
     const [userAnswer, setUserAnswer] = React.useState({} as { [key: number]: string });
-    const [progress, setProgress] = React.useState(0)
+    const [quiz, setQuiz] = useState<Quiz[]>([]);
+    const [loading, setLoading] = useState(false);
     const currentQuestionIndex = Object.keys(userAnswer).length;
+    const isOnline = useOnlineStatus();
+
+    React.useEffect(() => {
+        axios.get('https://opentdb.com/api.php?amount=10&category=18&difficulty=easy')
+            .then((r) => {
+                const data: QuizData = r.data;
+                const d = data.results.map((item, index) => {
+                    item.incorrect_answers.push(item.correct_answer);
+                    return {
+                        id: index,
+                        question: decodeHtml(item.question),
+                        options: item.incorrect_answers.map(opt => decodeHtml(opt)).toSorted(),
+                        answer: decodeHtml(item.correct_answer)
+                    }
+                });
+                setQuiz(d);
+            });
+    }, [])
 
     React.useEffect(() => {
         const timer = setInterval(() => {
-            setProgress((prevProgress) => {
-                if (prevProgress >= 100) {
-                    clearInterval(timer);
-                    if (currentQuestionIndex < quiz.length)
-                        handleAnswer(quiz[currentQuestionIndex].id, '');
-                    return 100;
-                } else {
-                    return prevProgress + 1;
-                }
-            });
-        }, 100);
+            if (currentQuestionIndex < quiz.length) {
+                handleAnswer(quiz[currentQuestionIndex].id, '');
+            } else {
+                clearInterval(timer);
+                location.reload();
+            }
+        }, 10000)
 
-        return () => {
-            clearInterval(timer);
-            setProgress(0);
-        }
-    }, [currentQuestionIndex]);
+        return () => clearInterval(timer);
+    }, [currentQuestionIndex, quiz])
+
+    React.useEffect(()=>{
+        console.log("Starting Testing useEffect");
+        console.log(userAnswer);
+        console.log("User Answer: Should be like this");
+    }, [userAnswer])
 
     function handleAnswer(questionId: number, selectedOption: string) {
+        setLoading(true);
         setTimeout(() => {
             setUserAnswer((prevAnswer) => ({
                 ...prevAnswer,
                 [questionId]: selectedOption
             }));
-        }, 1000)
+            setLoading(false);
+        }, 100)
     }
 
     return (
         <>
             <PathDrawing/>
+            <button disabled={!isOnline}>
+                {isOnline ? 'Online' : 'Reconnecting...'}
+            </button>
             {currentQuestionIndex < quiz.length ? (
-                <div className={'flex flex-col items-center justify-center h-screen'}>
-                    <Progress value={100 - progress}
-                              className='w-2/3 [&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-red-500'/>
+                <div className='flex flex-col items-center justify-center h-screen'>
+                    <TimedProgressBar duration={10} height={8} resetFor={[currentQuestionIndex, quiz]}/>
                     <AnimatePresence mode="popLayout">
-                        <motion.h2 className={'text-3xl p-2 font-semibold'}
+                        <motion.h2 className={'text-3xl p-2 font-semibold w-4/5'}
                                    key={quiz[currentQuestionIndex].id}
                                    initial={{y: -10, opacity: 0}}
                                    animate={{y: 0, opacity: 1}}
@@ -135,6 +119,7 @@ const Quiz = () => {
                                 e.currentTarget.disabled = true;
                                 handleAnswer(quiz[currentQuestionIndex].id, option)
                             }}
+                            disabled={loading}
                             whileHover={{scale: 1.05}}
                             transition={{type: 'spring', stiffness: 500, damping: 10}}
                         >
