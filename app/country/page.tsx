@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 
 // Local
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import Country from "@/lib/features/country/Country";
 
 // ShadCN UI components
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,12 @@ import {
     CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+// Redux
+import { useDispatch } from "react-redux";
+import { setCountry } from "@/lib/features/country/countrySlice";
+import { useAppSelector } from "@/lib/hooks";
+import type { RootState } from "@/lib/store";
 
 interface CountryData {
     flags: {
@@ -52,7 +59,7 @@ function useDebouncedValue<T>(value: T, delay = 200) {
 
 const App = () => {
     const [open, setOpen] = React.useState(false);
-    const [value, setValue] = React.useState('');
+    const [value, setValue] = React.useState(useAppSelector((state: RootState) => state.country.country).countryName);
     const [search, setSearch] = useState('');
     const [countries, setCountries] = useState<CountryData[] | null>(null);
 
@@ -80,6 +87,8 @@ const App = () => {
     const Row = ({index, style}: ListChildComponentProps) => {
         const country = filtered[index];
         const selected = value === country.name.common;
+        const dispatch = useDispatch();
+
         return (
             <div style={style}>
                 <CommandItem
@@ -88,6 +97,7 @@ const App = () => {
                     onSelect={(currentValue) => {
                         setValue(currentValue === value ? '' : currentValue);
                         setOpen(false);
+                        dispatch(setCountry(country.name.common));
                     }}
                     className="px-2"
                 >
@@ -98,8 +108,7 @@ const App = () => {
                         height={24}
                         loading="lazy"
                         sizes="24px"
-                        style={{height: 'auto'}}
-                        className="mr-2 flex-shrink-0"
+                        className="mr-2 flex-shrink-0 w-6 h-6"
                     />
                     <span>{country.name.common}</span>
                     <Check className={cn('ml-auto', selected ? 'opacity-100' : 'opacity-0')}/>
@@ -110,14 +119,15 @@ const App = () => {
 
     return (
         <div className="flex flex-col items-center justify-center p-2">
-            <div className="font-semibold text-green-500">{isOnline ? "Online": "Loading..."}</div>
+            <Country/>
+            <div className="font-semibold text-green-500">{isOnline ? "Online" : "Loading..."}</div>
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
-                        className="w-[240px] justify-between text-fuchsia-600 whitespace-pre-wrap p-6"
+                        className="w-[240px] justify-between text-fuchsia-600 whitespace-pre-wrap p-6 ring-1 ring-inset ring-fuchsia-300"
                     >
                         {value || 'Select country...'}
                         <ChevronsUpDown className="opacity-50"/>

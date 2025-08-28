@@ -6,11 +6,11 @@ import CTA from "@/components/CTA";
 import Users from "@/components/Users";
 import Post from "@/components/Post";
 import Counter from "@/components/counter";
-import TechIcon from "@/components/tech-icon"
+import Country from "@/lib/features/country/Country"
 
 // ShadCN
 import { Button } from "@/components/ui/8bit/button";
-import Footer4Col  from "@/components/ui/footer-column";
+// import Footer4Col from "@/components/ui/footer-column";
 
 
 const App = () => {
@@ -22,11 +22,11 @@ const App = () => {
                     <Link href="/call">Calling</Link>
                 </Button>
             </div>
+            <Country/>
             <Users/>
             <Post/>
             <Counter/>
-            <TechIcon/>
-            <Footer4Col/>
+            {/*<Footer4Col/>*/}
         </>
     );
 };

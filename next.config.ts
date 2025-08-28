@@ -15,6 +15,18 @@ const nextConfig: NextConfig = {
                 hostname: "flagcdn.com",
                 port: "",
                 pathname: "/**"
+            },
+            {
+                protocol: "https",
+                hostname: "cdn.dummyjson.com",
+                port: "",
+                pathname: "/**",
+            },
+            {
+                protocol: "https",
+                hostname: "i.dummyjson.com",
+                port: "",
+                pathname: "/**",
             }
         ],
     },
