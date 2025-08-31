@@ -14,6 +14,7 @@ import {
   updateQuantity,
   clear,
 } from "@/lib/features/cart/cartSlice";
+import { motion, useAnimation } from "framer-motion";
 
 export default function FloatingCart() {
   const items = useAppSelector(selectCartItems);
@@ -25,18 +26,37 @@ export default function FloatingCart() {
     dispatch(updateQuantity({ id, quantity: Math.max(1, qty || 1) }));
   };
 
+  // Animate the FAB when count changes
+  const controls = useAnimation();
+  React.useEffect(() => {
+    controls.start({
+        scale: [1, 1.1, 1],
+        transition: {duration: 0.35, ease: "easeOut"},
+    }).then();
+  }, [count, controls]);
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button
+        <motion.button
           aria-label="Open cart"
           className="fixed right-4 bottom-4 z-50 rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring flex items-center justify-center size-14"
+          animate={controls}
+          whileTap={{ scale: 0.95 }}
         >
           <ShoppingCart className="size-6" />
           {count > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">{count}</span>
+            <motion.span
+              key={count}
+              initial={{ scale: 0.7, y: -8, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-xs flex items-center justify-center"
+            >
+              {count}
+            </motion.span>
           )}
-        </button>
+        </motion.button>
       </DialogTrigger>
       <DialogContent className="max-w-xl">
         <DialogHeader>
@@ -68,6 +88,7 @@ export default function FloatingCart() {
                       value={item.quantity}
                       onChange={(e) => onQtyChange(item.id, Number(e.target.value))}
                       className="w-16 border rounded px-2 py-1"
+                      autoFocus={false}
                     />
                     <Button
                       variant="ghost"
@@ -103,4 +124,3 @@ export default function FloatingCart() {
     </Dialog>
   );
 }
-

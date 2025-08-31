@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import axios from "axios";
 
 // Local
@@ -10,7 +10,9 @@ import { useQuery } from "@tanstack/react-query";
 
 // Icon
 import { Loader } from "lucide-react";
-import { random } from "lodash";
+
+// Clarity
+import Clarity from '@microsoft/clarity';
 
 interface Product {
     id: number;
@@ -53,30 +55,48 @@ interface Product {
 }
 
 const Product = () => {
-    const { data, isPending } = useQuery({
+    const {data, isFetching} = useQuery({
         queryKey: ["products"],
-        queryFn: () =>
-            axios
-                .get("https://dummyjson.com/products/?skip=" + random(0, 164))
-                .then((res) => {
-                    const data = res.data;
-                    console.log(data);
-                    return data.products as Product[];
-                })
-                .catch((err) => {
-                    console.log(err);
-                    throw err;
-                }),
+        queryFn: ({signal}) => axios
+            .get("https://dummyjson.com/products/?skip=" + Math.floor(Math.random() * 165), {
+                signal,
+            })
+            .then((res) => {
+                const data = res.data;
+                console.log(data);
+                return data.products as Product[];
+            })
+            .catch((err) => {
+                console.log(err);
+                throw err;
+            }),
+        placeholderData: (previous) => previous,
+        staleTime: 5000,
+        // gcTime: 1000,
     });
+
+    useEffect(() => {
+        const projectId = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID;
+
+        if (typeof projectId === "string") {
+            Clarity.init(projectId);
+            Clarity.identify("custom-id");
+            Clarity.consent();
+            // Set tag
+            Clarity.setTag("userType", "guest");
+        } else {
+            console.error("CLARITY_PROJECT_ID is not defined in the environment variables.");
+        }
+    }, []);
 
     return (
         <>
-            {isPending && (
-                <p className={"flex items-center justify-center gap-2 mt-10"}>
-                    <Loader size={40} className={"animate-spin"} />
-                </p>
+            {isFetching && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur">
+                    <Loader className="size-10 animate-spin text-primary"/>
+                </div>
             )}
-            <Products products={data} />
+            <Products products={data}/>
         </>
     );
 };

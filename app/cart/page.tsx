@@ -54,6 +54,7 @@ export default function CartPage() {
                   alt={item.title}
                   width={80}
                   height={80}
+                  sizes="80px"
                   className="w-20 h-20 object-cover rounded"
                 />
                 <div className="flex-1">

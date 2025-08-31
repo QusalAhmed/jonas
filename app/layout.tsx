@@ -11,6 +11,8 @@ import StoreProvider from "./StoreProvider";
 
 // Floating Cart
 import FloatingCart from "@/components/cart/FloatingCart";
+// Navbar
+import Navbar from "@/components/nav/Navbar";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -40,6 +42,7 @@ export default function RootLayout({
         >
         <StoreProvider>
             <Providers>
+                <Navbar />
                 {children}
                 <FloatingCart />
             </Providers>

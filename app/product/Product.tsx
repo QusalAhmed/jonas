@@ -2,6 +2,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Font
+import { ubuntu } from "@/app/ui/fonts";
+
 // NextJS
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -64,10 +67,33 @@ export default function Products({
     const [selected, setSelected] = useState<Product | null>(null);
     // Track the current image in a gallery
     const [imageIdx, setImageIdx] = useState(0);
+    // Slider state per product card
+    const [cardImageIdx, setCardImageIdx] = useState<Record<number, number>>({});
+    const [sliderReady, setSliderReady] = useState(false);
+    // Track if the user is interacting with slider (per product)
+    const [cardSliderPaused, setCardSliderPaused] = useState<Record<number, boolean>>({});
+    // Modal slider auto-slide pause
+    const [modalSliderPaused, setModalSliderPaused] = useState(false);
 
     // Cart + Router
     const dispatch = useAppDispatch();
     const router = useRouter();
+
+    // After content load, enable sliders to avoid flicker
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const onLoad = () => setSliderReady(true);
+        if (document.readyState === 'complete') {
+            setSliderReady(true);
+            return;
+        }
+        window.addEventListener('load', onLoad);
+        const fallback = setTimeout(() => setSliderReady(true), 800);
+        return () => {
+            window.removeEventListener('load', onLoad);
+            clearTimeout(fallback);
+        };
+    }, []);
 
     // Reset gallery when selected product changes
     useEffect(() => {
@@ -138,9 +164,38 @@ export default function Products({
         };
     }, [selected]);
 
+    // Auto-slide for product card image sliders
+    useEffect(() => {
+        if (!sliderReady) return;
+        const intervals: Record<number, NodeJS.Timeout> = {};
+        products?.forEach((product) => {
+            if (product.images?.length > 1 && !cardSliderPaused[product.id]) {
+                intervals[product.id] = setInterval(() => {
+                    setCardImageIdx((idxState) => ({
+                        ...idxState,
+                        [product.id]: ((idxState[product.id] ?? 0) + 1) % product.images.length,
+                    }));
+                }, 30000);
+            }
+        });
+        return () => {
+            Object.values(intervals).forEach(clearInterval);
+        };
+
+    }, [products, sliderReady, cardSliderPaused]);
+
+    // Auto-slide for modal gallery
+    useEffect(() => {
+        if (!selected || !sliderReady || modalSliderPaused || !(selected.images?.length > 1)) return;
+        const interval = setInterval(() => {
+            setImageIdx((idx) => (idx + 1) % selected.images.length);
+        }, 3500);
+        return () => clearInterval(interval);
+    }, [selected, sliderReady, modalSliderPaused]);
+
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-            {products?.map((product) => (
+            {products?.map((product, idx) => (
                 <motion.div
                     key={product.id}
                     layoutId={`card-${product.id}`}
@@ -148,14 +203,91 @@ export default function Products({
                     className="cursor-pointer bg-white rounded-xl shadow hover:shadow-lg transition-shadow overflow-hidden"
                     whileHover={{scale: 1.05}}
                 >
-                    <motion.img
-                        src={product.thumbnail}
-                        alt={product.title}
-                        className="w-auto object-fill"
-                    />
+                    <div className="relative w-full h-48 flex items-center justify-center">
+                        <AnimatePresence initial={false} mode="wait">
+                            {(!sliderReady || !product.images?.length) && (
+                                <motion.div
+                                    key="thumb"
+                                    initial={{opacity: 0}}
+                                    animate={{opacity: 1}}
+                                    exit={{opacity: 0}}
+                                    className="absolute inset-0"
+                                >
+                                    <Image
+                                        src={product.thumbnail}
+                                        alt={product.title}
+                                        height={100}
+                                        width={100}
+                                        sizes="(max-width: 640px) 100vw, 640px"
+                                        className="object-contain w-full h-full bg-gray-50"
+                                        priority={idx < 4}
+                                    />
+                                </motion.div>
+                            )}
+                            {sliderReady && product.images?.length > 0 && (
+                                <motion.div
+                                    key="slider"
+                                    initial={{opacity: 0}}
+                                    animate={{opacity: 1}}
+                                    exit={{opacity: 0}}
+                                    className="absolute inset-0"
+                                    onMouseEnter={() => setCardSliderPaused((s) => ({...s, [product.id]: true}))}
+                                    onMouseLeave={() => setCardSliderPaused((s) => ({...s, [product.id]: false}))}
+                                >
+                                    <button
+                                        className="absolute left-2 z-10 bg-white/70 rounded-full p-1 shadow hover:bg-white"
+                                        style={{top: '50%', transform: 'translateY(-50%)'}}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setCardImageIdx((idxState) => ({
+                                                ...idxState,
+                                                [product.id]: ((idxState[product.id] ?? 0) - 1 + product.images.length) % product.images.length,
+                                            }));
+                                        }}
+                                        aria-label="Previous image"
+                                    >
+                                        <span className="text-lg">‹</span>
+                                    </button>
+                                    <Image
+                                        src={product.images[cardImageIdx[product.id] ?? 0]}
+                                        alt={product.title}
+                                        height={100}
+                                        width={100}
+                                        sizes="(max-width: 640px) 100vw, 640px"
+                                        className="object-contain w-full h-full bg-gray-50 transition-all duration-300"
+                                        priority={idx < 4}
+                                    />
+                                    <button
+                                        className="absolute right-2 z-10 bg-white/70 rounded-full p-1 shadow hover:bg-white"
+                                        style={{top: '50%', transform: 'translateY(-50%)'}}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setCardImageIdx((idxState) => ({
+                                                ...idxState,
+                                                [product.id]: ((idxState[product.id] ?? 0) + 1) % product.images.length,
+                                            }));
+                                        }}
+                                        aria-label="Next image"
+                                    >
+                                        <span className="text-lg">›</span>
+                                    </button>
+                                    {product.images.length > 1 && (
+                                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                                            {product.images.map((_, i) => (
+                                                <span
+                                                    key={i}
+                                                    className={`inline-block w-2 h-2 rounded-full ${i === (cardImageIdx[product.id] ?? 0) ? 'bg-primary' : 'bg-gray-300'}`}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                     <div className="p-3">
                         <h3 className="font-semibold text-lg">
-                            {product.title}
+                            <span className={`${ubuntu.className} antialiased`}>{product.title}</span>
                         </h3>
                         <p className="text-gray-600">{product.brand}</p>
                         {product.discountPercentage > 0 ? (
@@ -240,11 +372,14 @@ export default function Products({
                                 {/* Product gallery: responsive main image with thumbnails */}
                                 <div className="flex flex-col gap-3 items-center px-4">
                                     <div className="w-full">
-                                        <div className="relative w-full aspect-[4/3] bg-gray-50 rounded-lg overflow-hidden">
+                                        <div className="relative w-full aspect-[4/3] bg-gray-50 rounded-lg overflow-hidden"
+                                             onMouseEnter={() => setModalSliderPaused(true)}
+                                             onMouseLeave={() => setModalSliderPaused(false)}>
                                             <Image
                                                 src={(selected.images && selected.images[imageIdx]) || selected.thumbnail}
                                                 alt={selected.title}
                                                 fill
+                                                sizes="(max-width: 640px) 100vw, 640px"
                                                 className="object-contain"
                                             />
                                         </div>
@@ -258,12 +393,14 @@ export default function Products({
                                                     className={`shrink-0 rounded-md border ${idx === imageIdx ? "border-primary ring-2 ring-primary/40" : "border-gray-200"}`}
                                                     aria-label={`View image ${idx + 1}`}
                                                 >
-                                                    <div className="relative w-20 h-20 md:w-24 md:h-24 overflow-hidden rounded-md bg-white">
+                                                    <div
+                                                        className="relative w-20 h-20 md:w-24 md:h-24 overflow-hidden rounded-md bg-white">
                                                         <Image src={src}
                                                                alt={`${selected.title} ${idx + 1}`}
-                                                               width={100}
-                                                               height={100}
-                                                               className="object-cover" />
+                                                               width={96}
+                                                               height={96}
+                                                               sizes="(max-width: 768px) 80px, 96px"
+                                                               className="object-cover"/>
                                                     </div>
                                                 </button>
                                             ))}
@@ -433,7 +570,7 @@ export default function Products({
                                                     (review, i) => (
                                                         <div
                                                             key={i}
-                                                            className="bg-gray-100 p-4 rounded-lg"
+                                                            className="p-2"
                                                         >
                                                             <div className="flex items-center mb-2">
                                                                 <Image
