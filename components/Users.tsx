@@ -1,6 +1,6 @@
 'use server';
 // Drizzle
-import { db } from '@/lib/drizzle-agent';
+import db from '@/lib/drizzle-agent';
 import { usersTable, postsTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 

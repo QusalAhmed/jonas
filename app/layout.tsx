@@ -5,6 +5,7 @@ import React from "react";
 
 // Local
 import { Providers } from './Providers'
+import HeroSection from "@/components/hero/HeroSection";
 
 // Redux Toolkit
 import StoreProvider from "./StoreProvider";
@@ -43,6 +44,7 @@ export default function RootLayout({
         <StoreProvider>
             <Providers>
                 <Navbar />
+                {/*<HeroSection/>*/}
                 {children}
                 <FloatingCart />
             </Providers>

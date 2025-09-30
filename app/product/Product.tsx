@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSwipeable } from 'react-swipeable';
 
 // Font
 import { ubuntu } from "@/app/ui/fonts";
@@ -78,6 +79,22 @@ export default function Products({
     // Cart + Router
     const dispatch = useAppDispatch();
     const router = useRouter();
+
+    const handlers = useSwipeable({
+        onSwiped: (eventData) => console.log("User Swiped!", eventData),
+        onSwipedLeft: () => {
+            console.log("Swiped Left!");
+            if (selected) {
+                setImageIdx((idx) => (idx + 1) % selected.images.length);
+            }
+        },
+        onSwipedRight: () => {
+            console.log("Swiped Right!");
+            if (selected) {
+                setImageIdx((idx) => (idx - 1 + selected.images.length) % selected.images.length);
+            }
+        },
+    });
 
     // After content load, enable sliders to avoid flicker
     useEffect(() => {
@@ -245,6 +262,7 @@ export default function Products({
                                             }));
                                         }}
                                         aria-label="Previous image"
+                                        hidden={product.images.length == 1}
                                     >
                                         <span className="text-lg">‹</span>
                                     </button>
@@ -268,6 +286,7 @@ export default function Products({
                                             }));
                                         }}
                                         aria-label="Next image"
+                                        hidden={product.images.length == 1}
                                     >
                                         <span className="text-lg">›</span>
                                     </button>
@@ -370,7 +389,7 @@ export default function Products({
                                     </button>
                                 </div>
                                 {/* Product gallery: responsive main image with thumbnails */}
-                                <div className="flex flex-col gap-3 items-center px-4">
+                                <div className="flex flex-col gap-3 items-center px-4" {...handlers}>
                                     <div className="w-full">
                                         <div className="relative w-full aspect-[4/3] bg-gray-50 rounded-lg overflow-hidden"
                                              onMouseEnter={() => setModalSliderPaused(true)}

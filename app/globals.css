@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/*Tiptap*/
+@import "../styles/_variables.scss";
+@import "../styles/_keyframe-animations.scss";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -104,6 +108,39 @@
   --color-3: hsl(210 100% 63%);
   --color-4: hsl(195 100% 63%);
   --color-5: hsl(90 100% 63%);
+
+    /*Custom*/
+    --color-primary: oklch(0.21 0.006 285.885);
+    --color-secondary: oklch(0.967 0.001 286.375);
+    --color-accent: oklch(0.967 0.001 286.375);
+    --color-destructive: oklch(0.577 0.245 27.325);
+    --color-background: oklch(1 0 0);
+    --color-foreground: oklch(0.141 0.005 285.823);
+    --color-card: oklch(1 0 0);
+    --color-card-foreground: oklch(0.141 0.005 285.823);
+    --color-popover: oklch(1 0 0);
+    --color-popover-foreground: oklch(0.141 0.005 285.823);
+    --color-primary-foreground: oklch(0.985 0 0);
+
+    --gray-1: oklch(0.967 0.001 286.375);
+    --gray-2: oklch(0.92 0.004 286.32);
+    --gray-3: oklch(0.828 0.189 84.429);
+    --gray-4: oklch(0.646 0.222 41.116);
+    --gray-5: oklch(0.6 0.118 184.704);
+    --gray-6: oklch(0.398 0.07 227.392);
+    --gray-7: oklch(0.705 0.015 286.067);
+    --gray-8: oklch(0.769 0.188 70.08);
+
+    --purple-light: oklch(0.967 0.001 286.375);
+    --purple-dark: oklch(0.21 0.006 285.885);
+    --purple-accent: oklch(0.967 0.001 286.375);
+    --purple-destructive: oklch(0.577 0.245 27.325);
+    --purple-background: oklch(1 0 0);
+    --purple-foreground: oklch(0.141 0.005 285.823);
+    --purple-card: oklch(1 0 0);
+    --purple-card-foreground: oklch(0.141 0.005 285.823);
+    --purple-popover: oklch(1 0 0);
+    --purple: oklch(0.21 0.006 285.885);
 }
 
 .dark {
