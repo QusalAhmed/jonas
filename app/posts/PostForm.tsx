@@ -53,7 +53,7 @@ export default function ProfileForm() {
         content: z.string().min(10, {
             message: "Content must be at least 100 characters.",
         }),
-        user: z.enum(users ? users.map((user) => user.id) : [], {
+        user: z.string().min(1, {
             message: "Please select a valid user.",
         }),
         category: z.enum(["tech", "life", "sports", "food", "travel"]),

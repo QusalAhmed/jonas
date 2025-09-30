@@ -1,6 +1,6 @@
 'use server';
 // Drizzle
-import { db } from '@/lib/drizzle-agent';
+import db from '@/lib/drizzle-agent';
 import { postsTable } from "@/db/schema";
 
 async function insertToDatabase({newPost}: { newPost: typeof postsTable.$inferInsert }) {

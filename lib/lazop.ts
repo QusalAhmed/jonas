@@ -25,7 +25,7 @@ export interface LazopApiResponse<T = unknown> {
     message?: string;
     request_id?: string;
 
-    [key: string]: any; // for dynamic extra fields
+    [key: string]: unknown; // for dynamic extra fields
 }
 
 // Lazop API parameters
@@ -181,8 +181,9 @@ export class LazopClient {
 
             response.body = jsonObj;
             return response;
-        } catch (err: any) {
-            logApiError(this.appKey, P_SDK_VERSION, fullUrl, "HTTP_ERROR", err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            logApiError(this.appKey, P_SDK_VERSION, fullUrl, "HTTP_ERROR", message);
             throw err;
         }
     }
