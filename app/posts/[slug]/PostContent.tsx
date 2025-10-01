@@ -26,17 +26,17 @@ async function PostContent({slug}: { slug: string }) {
 
     return (
         <div className={'p-4'}>
-            {post?.images?.map(image => (
-                <div key={image.id} className={'mb-4'}>
+            <div className={'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 items-center'}>
+                {post?.images?.map(image => (
                     <Image
                         src={image.imagePath}
                         alt={image.alt}
-                        width={image.size ? parseInt(image.size) : 600}
-                        height={image.size ? parseInt(image.size) : 600}
-                        className={'w-full h-auto object-cover rounded'}
+                        key={image.id}
+                        width={600}
+                        height={600}
                     />
-                </div>
-            ))}
+                ))}
+            </div>
             <h1 className={'text-2xl font-bold'}>{post?.title}</h1>
             <p className={'text-gray-500'}>{post?.content}</p>
             <div className={'p-4'}>

@@ -1,11 +1,16 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useFormStatus } from "react-dom";
+
+//  Local
+import {formSchema} from "@/lib/validation/postForm.schema"
+
 import axios from "axios";
 import slugify from "slugify"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { useForm } from "react-hook-form"
 import { nanoid } from 'nanoid'
 
 // Local import
@@ -31,6 +36,16 @@ import Image from "next/image"
 // Icon
 import { CircleX } from "lucide-react"
 
+function SubmitButton() {
+    const formStatus = useFormStatus()
+
+    return (
+        <Button type="submit" className={'w-full'} disabled={formStatus.pending}>
+            {formStatus.pending ? 'Submitting...' : 'Submit'}
+        </Button>
+    )
+}
+
 
 export default function ProfileForm() {
     const [users, setUsers] = useState<{ id: string, name: string }[] | null>(null);
@@ -46,23 +61,6 @@ export default function ProfileForm() {
             }
         )
     }, []);
-
-    const formSchema = z.object({
-        title: z.string().min(10, {
-            message: "Title must be at least 10 characters.",
-        }),
-        slug: z.string(),
-        content: z.string().min(10, {
-            message: "Content must be at least 100 characters.",
-        }),
-        user: z.string().min(1, {
-            message: "Please select a valid user.",
-        }),
-        category: z.enum(["tech", "life", "sports", "food", "travel"]),
-        images: z.array(z.instanceof(File), {
-            message: "Please upload at least one file.",
-        }).min(1, "Please upload a file"),
-    })
 
     // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
@@ -174,6 +172,7 @@ export default function ProfileForm() {
                                 <FormLabel>Select User</FormLabel>
                                 <FormControl>
                                     <select {...field} className="border rounded px-2 py-1">
+                                        <option key={0}>Select User</option>
                                         {users?.map((user) => (
                                             <option key={user.id} value={user.id}>{user.name}</option>
                                         ))}
@@ -265,7 +264,7 @@ export default function ProfileForm() {
                         )}
                     </div>
 
-                    <Button type="submit" className={'w-full'}>Submit</Button>
+                    <SubmitButton />
                 </form>
             </Form>
         </>

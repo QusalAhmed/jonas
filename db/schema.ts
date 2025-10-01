@@ -58,10 +58,11 @@ export const postImageTable = pgTable("post_image", {
     order: serial("order").notNull(),
     size: varchar("size", {length: 100}).notNull(),
     type: varchar("type", {length: 100}).notNull(),
-    // width: serial("width").notNull(),
-    // height: serial("height").notNull(),
+    hash: text("hash"),
     ...timestamps
-});
+}, (table) => [
+    index("post_image_hash_idx").on(table.hash),
+]);
 
 // Define relations for postImageTable
 export const postImageRelations = relations(postImageTable, ({one}) => ({
