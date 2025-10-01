@@ -76,6 +76,7 @@ export default function ProfileForm() {
 
     // 2. Define a submit handler.
     function onSubmit(values: z.infer<typeof formSchema>) {
+        console.log(values);
         handleSubmit(values).then((response) => {
             console.log(response);
             if (response.status === 200) {
