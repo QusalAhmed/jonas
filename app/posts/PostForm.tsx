@@ -38,7 +38,9 @@ export default function ProfileForm() {
 
     useEffect(() => {
         axios.get('api/users').then((response) => {
-            setUsers(response.data)
+            if (response.data.length > 0) {
+                setUsers(response.data)
+            }
         }).catch((error) => {
                 console.error('Error fetching users:', error);
             }
@@ -100,7 +102,7 @@ export default function ProfileForm() {
 
     useEffect(() => {
         const newSlug = slugify(titleValue || '', {lower: true})
-        form.setValue('slug', newSlug + nanoid());
+        form.setValue('slug', newSlug + '-' + nanoid());
     }, [titleValue, form])
 
     useEffect(() => {

@@ -1,9 +1,11 @@
 'use server'
 
+import fs from 'node:fs';
+import path from 'node:path';
+
 // Drizzle
 import db from '@/lib/drizzle-agent';
-import { postsTable } from "@/db/schema";
-import { randomInt } from "node:crypto";
+import { postsTable, postImageTable } from "@/db/schema";
 
 // Define an interface that matches the form data structure
 interface PostFormData {
@@ -16,13 +18,31 @@ interface PostFormData {
 }
 
 export default async function handleSubmit(data: PostFormData) {
-    await db.insert(postsTable).values({
-        id: randomInt(5000, 9999),
+    const result =  await db.insert(postsTable).values({
         title: data.title,
         content: data.content,
         slug: data.slug,
         userId: data.user,
-    });
+    }).returning();
+
+    // Upload images to the server
+    data.images.map(async (image, index) => {
+        const stream = fs.createWriteStream(path.join(process.cwd(), 'public', 'product', image.name));
+        const bufferedImage = await image.arrayBuffer();
+        stream.write(Buffer.from(bufferedImage));
+        stream.end();
+
+        // Insert the image path into the database
+        await db.insert(postImageTable).values({
+            postId: result[0].id,
+            imagePath: `/product/${image.name}`,
+            alt: data.title,
+            order: index + 1,
+            size: image.size.toString(),
+            type: image.type,
+        })
+    })
+
     return {
         status: 200,
         body: 'Success',

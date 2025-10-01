@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 // Drizzle
 import db from '@/lib/drizzle-agent';
@@ -15,6 +16,7 @@ const getPost = async (slug: string) => {
                     name: true,
                 },
             },
+            images: true,
         },
     });
 }
@@ -24,6 +26,17 @@ async function PostContent({slug}: { slug: string }) {
 
     return (
         <div className={'p-4'}>
+            {post?.images?.map(image => (
+                <div key={image.id} className={'mb-4'}>
+                    <Image
+                        src={image.imagePath}
+                        alt={image.alt}
+                        width={image.size ? parseInt(image.size) : 600}
+                        height={image.size ? parseInt(image.size) : 600}
+                        className={'w-full h-auto object-cover rounded'}
+                    />
+                </div>
+            ))}
             <h1 className={'text-2xl font-bold'}>{post?.title}</h1>
             <p className={'text-gray-500'}>{post?.content}</p>
             <div className={'p-4'}>

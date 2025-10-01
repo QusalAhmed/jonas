@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, uuid, varchar, serial, text, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, uuid, varchar, serial, text, uniqueIndex, index, integer } from "drizzle-orm/pg-core";
 import { relations } from 'drizzle-orm';
 import timestamps from "./columns.helpers";
 
@@ -38,10 +38,35 @@ export const usersRelations = relations(
 // Define relations for postsTable
 export const postsRelations = relations(
     postsTable,
-    ({one}) => ({
+    ({one, many}) => ({
         user: one(usersTable, {
             fields: [postsTable.userId],
             references: [usersTable.id],
         }),
-    })
+        images: many(postImageTable),
+    }),
 );
+
+export const postImageTable = pgTable("post_image", {
+    id: uuid().primaryKey().defaultRandom(),
+    postId: integer("post_id")
+        .references(() => postsTable.id, {
+            onDelete: "cascade",
+        }),
+    imagePath: varchar("image_path", {length: 255}).notNull(),
+    alt: varchar("alt", {length: 255}).notNull(),
+    order: serial("order").notNull(),
+    size: varchar("size", {length: 100}).notNull(),
+    type: varchar("type", {length: 100}).notNull(),
+    // width: serial("width").notNull(),
+    // height: serial("height").notNull(),
+    ...timestamps
+});
+
+// Define relations for postImageTable
+export const postImageRelations = relations(postImageTable, ({one}) => ({
+    post: one(postsTable, {
+        fields: [postImageTable.postId],
+        references: [postsTable.id],
+    }),
+}));
