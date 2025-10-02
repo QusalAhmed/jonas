@@ -36,6 +36,9 @@ import Image from "next/image"
 // Icon
 import { CircleX } from "lucide-react"
 
+// Tiptap
+import type {JSONContent} from '@tiptap/core'
+
 function SubmitButton() {
     const formStatus = useFormStatus()
 
@@ -49,7 +52,7 @@ function SubmitButton() {
 
 export default function ProfileForm() {
     const [users, setUsers] = useState<{ id: string, name: string }[] | null>(null);
-    const [editorContent, setEditorContent] = useState<string>('');
+    const [editorContent, setEditorContent] = useState<JSONContent>({});
 
     useEffect(() => {
         axios.get('api/users').then((response) => {
@@ -67,7 +70,6 @@ export default function ProfileForm() {
         resolver: zodResolver(formSchema),
         defaultValues: {
             title: "",
-            content: "",
             user: users ? users[0].id : "",
             category: "life",
             slug: "",
@@ -150,10 +152,8 @@ export default function ProfileForm() {
                                 <FormControl>
                                     {/* Use TipTap editor instead of a textarea. It updates form.content via setEditorContent/useEffect. */}
                                     <div>
-                                        <MyEditor setEditorContent={(html) => {
-                                            setEditorContent(html)
-                                            // Keep form value in sync for validation/submission
-                                            form.setValue('content', html, { shouldValidate: true })
+                                        <MyEditor setEditorContent={(jsonb) => {
+                                            setEditorContent(jsonb)
                                         }} />
                                     </div>
                                 </FormControl>

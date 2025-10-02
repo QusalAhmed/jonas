@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, uuid, varchar, serial, text, uniqueIndex, index, integer } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, uuid, varchar, serial, text, uniqueIndex, index, integer, jsonb } from "drizzle-orm/pg-core";
 import { relations } from 'drizzle-orm';
 import timestamps from "./columns.helpers";
 
@@ -18,7 +18,7 @@ export const usersTable = pgTable("users", {
 export const postsTable = pgTable("posts", {
     id: serial("id").primaryKey(),
     title: varchar("title", {length: 255}).notNull(),
-    content: text("content").notNull(),
+    content: jsonb("content").notNull(),
     slug: varchar("slug", {length: 255}).notNull().unique(),
     userId: uuid("user_id")
         .references(() => usersTable.id, {
@@ -26,6 +26,24 @@ export const postsTable = pgTable("posts", {
         }),
     ...timestamps
 });
+
+// Define postImageTable BEFORE postsRelations so it can be referenced safely
+export const postImageTable = pgTable("post_image", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    postId: integer("post_id")
+        .references(() => postsTable.id, {
+            onDelete: "cascade",
+        }),
+    imagePath: varchar("image_path", {length: 255}).notNull(),
+    alt: varchar("alt", {length: 255}).notNull(),
+    order: serial("order").notNull(),
+    size: varchar("size", {length: 100}).notNull(),
+    type: varchar("type", {length: 100}).notNull(),
+    hash: text("hash"),
+    ...timestamps
+}, (table) => [
+    index("post_image_hash_idx").on(table.hash),
+]);
 
 // Define relations for usersTable
 export const usersRelations = relations(
@@ -46,23 +64,6 @@ export const postsRelations = relations(
         images: many(postImageTable),
     }),
 );
-
-export const postImageTable = pgTable("post_image", {
-    id: uuid().primaryKey().defaultRandom(),
-    postId: integer("post_id")
-        .references(() => postsTable.id, {
-            onDelete: "cascade",
-        }),
-    imagePath: varchar("image_path", {length: 255}).notNull(),
-    alt: varchar("alt", {length: 255}).notNull(),
-    order: serial("order").notNull(),
-    size: varchar("size", {length: 100}).notNull(),
-    type: varchar("type", {length: 100}).notNull(),
-    hash: text("hash"),
-    ...timestamps
-}, (table) => [
-    index("post_image_hash_idx").on(table.hash),
-]);
 
 // Define relations for postImageTable
 export const postImageRelations = relations(postImageTable, ({one}) => ({

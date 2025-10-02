@@ -1,12 +1,15 @@
 import { z } from "zod";
 
+// Tiptap
+import type {JSONContent} from '@tiptap/core'
+
 export const formSchema = z.object({
     title: z.string().min(10, {
         message: "Title must be at least 10 characters.",
     }),
     slug: z.string(),
-    content: z.string().min(10, {
-        message: "Content must be at least 100 characters.",
+    content: z.custom<JSONContent>(() =>{
+        return true
     }),
     user: z.string().min(1, {
         message: "Please select a valid user.",

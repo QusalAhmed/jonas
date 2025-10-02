@@ -1,13 +1,14 @@
 'use server'
 
+// Next.js
+import { revalidatePath } from "next/cache";
+
 import fs from 'node:fs';
 import path from "path";
 import phash from 'sharp-phash';
 
-
 //  Local
 import {formSchema} from "@/lib/validation/postForm.schema"
-
 
 // Drizzle
 import db from '@/lib/drizzle-agent';
@@ -57,6 +58,8 @@ export default async function handleSubmit(formData: unknown) {
             hash: hash,
         })
     })
+
+    revalidatePath('/posts');
 
     return {
         status: 200,

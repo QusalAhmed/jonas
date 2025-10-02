@@ -4,6 +4,9 @@ import db from '@/lib/drizzle-agent';
 import { usersTable, postsTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+// Components
+import RenderEditor from "@/components/editor/RenderEditor";
+
 async function getUsers() {
     return db.select({
         user: usersTable,
@@ -26,7 +29,7 @@ export default async function Users() {
                         {post && (
                             <div key={post.id} className='ml-4'>
                                 <h3 className='text-sm font-semibold'>{post.title}</h3>
-                                <p>{post.content}</p>
+                                <RenderEditor json={post.content as object}/>
                             </div>
                         )}
                     </div>

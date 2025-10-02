@@ -7,6 +7,7 @@ import React, { useEffect } from 'react'
 // Tiptap
 import { TextStyleKit } from '@tiptap/extension-text-style'
 import type { Editor } from '@tiptap/react'
+import type {JSONContent} from '@tiptap/core'
 import { EditorContent, useEditor, useEditorState, findParentNode, posToDOMRect } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
@@ -190,19 +191,16 @@ function BubbleMarksMenu({ editor }: { editor: Editor | null }) {
 }
 
 const TipTap = (
-    { setEditorContent, autoFocus = false }: { setEditorContent: (content: string) => void, autoFocus?: boolean }
+    { setEditorContent }: { setEditorContent: (T: JSONContent) => void }
 ) => {
     const editor = useEditor({
         extensions,
         content: '',
         // Ensure the editor does not render before hydration to avoid focus jumps
         immediatelyRender: false,
-        // Explicitly control autofocus behavior
-        autofocus: autoFocus ? 'end' : false,
         onUpdate: ({ editor }) => {
             localStorage.setItem('editorContent', editor.getHTML())
-            console.log(editor.getJSON())
-            setEditorContent(editor.getHTML())
+            setEditorContent(editor.getJSON())
         },
     })
 
